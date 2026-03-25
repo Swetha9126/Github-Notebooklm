@@ -184,11 +184,11 @@ def embed_and_store(corpus, file_paths, collection):
 
 @app.route("/")
 def serve_index():
-    return send_from_directory(os.path.join(os.path.dirname(__file__), "templates"),"index.html")
+    return send_from_directory(os.path.dirname(__file__), "index.html")
 
-@app.route("/static/<path:filename>")
+@app.route("/<path:filename>")
 def serve_static(filename):
-    return send_from_directory(os.path.join(os.path.dirname(__file__), "static"), filename)
+    return send_from_directory(os.path.dirname(__file__), filename)
 
 @app.route("/load_repo", methods=["POST"])
 def load_repo():
