@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Notebook</title>
+<link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>GitHub <span>Notebook</span></h1>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="stats-row hidden" id="statsRow"></div>
+
+  <div style="padding: 16px 20px 4px;">
+    <div class="sidebar-label">Sources</div>
+  </div>
+  <div class="sources-list" id="sourcesList"></div>
+
+  <button class="add-source-btn" onclick="addRepo()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+    Add repository
+  </button>
+
+  <button class="new-repo-btn hidden" id="resetBtn" onclick="resetRepo()">↩ New Session</button>
+  <div id="sessionsDivider" class="divider hidden" style="margin-top:12px;"></div>
+  <div style="padding: 8px 20px 8px;" id="sessionLabel" class="hidden">
+      <div class="sidebar-label">Past Sessions</div>
+  </div>
+  <div class="session-list" id="sessionList"></div>
+</aside>
+
+<main class="main">
+  <div class="landing" id="landing">
+    <div class="landing-grid"></div>
+    <div class="landing-content">
+      <div class="landing-badge">
+        <span>●</span> AI-Powered Repository Analysis
+      </div>
+      <h1 class="landing-title">
+        Understand any<br><span>GitHub repo</span><br>instantly
+      </h1>
+      <p class="landing-sub">
+        Load any public repository and ask questions about the code,
+        architecture, setup, or any file — powered by semantic search and AI.
+      </p>
+      <div class="feature-cards">
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Semantic Search</h3>
+          <p>Find relevant code across all files intelligently</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3>AI Chat</h3>
+          <p>Ask anything about the codebase naturally</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📄</div>
+          <h3>Full Code</h3>
+          <p>Retrieve any complete file on request</p>
+        </div>
+      </div>
+      <div class="arrow-hint">
+        ← click "Add repository" to get started
+      </div>
+    </div>
+  </div>
+
+  <div class="progress-wrap hidden" id="progressWrap">
+    <div class="progress-label" id="progressLabel">Scanning repository...</div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+  </div>
+
+  <div class="chat-interface hidden" id="chatInterface">
+    <div class="repo-header">
+      <div class="repo-info">
+        <h2 id="repoName">Repository</h2>
+        <div class="repo-meta">
+          <span><div class="status-dot"></div> Active</span>
+          <a href="" id="githubLink" target="_blank">View on GitHub ↗</a>
+        </div>
+      </div>
+      <button class="clear-chat-btn" onclick="clearChat()">
+         Clear Chat
+      </button>
+    </div>
+
+    <div class="messages-area" id="messagesArea">
+      <div id="suggestionsWrap">
+        <div class="suggestion-label">Suggested Questions</div>
+        <div class="suggestions-grid">
+          <button class="suggestion-btn" onclick="sendSuggestion(this)">What is this repository about?</button>
+          <button class="suggestion-btn" onclick="sendSuggestion(this)">What are the main files and their purpose?</button>
+          <button class="suggestion-btn" onclick="sendSuggestion(this)">How do I set up and run this project?</button>
+          <button class="suggestion-btn" onclick="sendSuggestion(this)">What dependencies does this project use?</button>
+        </div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="input-wrap">
+        <textarea class="chat-input" id="chatInput" rows="1"
+          placeholder="Ask anything about this repository..."
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="add-repo-modal hidden" id="addRepoModal">
+  <div class="modal-box">
+    <h3 id="modalTitle"> Load Repository</h3>
+    <p id="modalSubtitle">// enter a github repository url</p>
+    <input
+      type="text"
+      class="modal-input"
+      id="addRepoUrl"
+      placeholder="https://github.com/user/repo"
+      onkeydown="if(event.key==='Enter') confirmAddRepo()"
+    />
+    <div id="addRepoStatus" style="font-size:11px;font-family:var(--mono);margin-bottom:10px;min-height:16px;"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeAddRepoModal()">Cancel</button>
+      <button class="modal-confirm" id="addRepoConfirmBtn" onclick="confirmAddRepo()">
+        <span class="btn-text" id="confirmBtnText">Load Repository</span>
+        <div class="add-spinner"></div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="add-repo-modal hidden" id="historyModal">
+  <div class="modal-box">
+    <h3>🕐 Chat History</h3>
+    <p>// click a session to restore it</p>
+    <div id="historyList" style="max-height:300px;overflow-y:auto;margin-bottom:12px;"></div>
+    <button class="modal-cancel" onclick="closeHistoryModal()">Close</button>
+  </div>
+</div>
+
+<script src="static/script.js"></script>
+</body>
+</html>
